@@ -273,6 +273,9 @@ require('lazy').setup({
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
 
+-- Set tabstop to 4 by default
+vim.o.tabstop = 4
+
 -- Set highlight on search
 vim.o.hlsearch = false
 
@@ -608,6 +611,18 @@ mason_lspconfig.setup_handlers {
       filetypes = (servers[server_name] or {}).filetypes,
     }
   end,
+}
+
+-- install gdscript as well
+require('lspconfig').gdscript.setup{
+  on_attach = on_attach,
+  capabilities = capabilities,
+  settings = servers['gdscript'],
+  filetypes = (servers[server_name] or {}).filetypes,
+  cmd = {'ncat', '127.0.0.1', '6005'},
+  on_error = function() 
+    print('lspconfig setup handler for gdscript: on_error called')
+  end
 }
 
 -- [[ Configure nvim-cmp ]]
