@@ -16,5 +16,8 @@ return {
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
+  
+  -- close brackets and quotes automatically
+  { 'echasnovski/mini.pairs', version = '*', opts = {} },
 }
 

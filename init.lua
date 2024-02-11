@@ -23,7 +23,10 @@ Kickstart.nvim is a template for your own configuration.
 
 
 Kickstart Guide:
-
+Test (hello lol{what is this?})
+This is some brackets {
+  What is this going on here?
+}
 I have left several `:help X` comments throughout the init.lua
 You should run that command and read that help section for more information.
 
@@ -41,6 +44,12 @@ P.S. You can delete this when you're done too. It's your config now :)
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
+local printErrors = false
+
+if vim.g.neovide then
+  vim.o.guifont = "FiraCode Nerd Font Mono:h12"
+end
+
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
@@ -71,7 +80,6 @@ require('lazy').setup("plugins")
 -- [[ Setting options ]]
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
-
 -- Set tabstop to 4 by default
 vim.o.tabstop = 4
 
@@ -79,7 +87,7 @@ vim.o.tabstop = 4
 vim.o.hlsearch = false
 
 -- Make line numbers default
-vim.wo.number = true
+vim.o.number = true
 
 -- Enable mouse mode
 vim.o.mouse = 'a'
@@ -112,6 +120,7 @@ vim.o.completeopt = 'menuone,noselect'
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
 
+vim.o.scrolloff = 3
 -- [[ Basic Keymaps ]]
 
 -- Keymaps for better default experience
@@ -137,23 +146,28 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
   group = highlight_group,
   pattern = '*',
+  desc = 'Highlight text on yanking',
 })
 
--- [[ Configure Telescope ]]
--- See `:help telescope` and `:help telescope.setup()`
-require('telescope').setup {
-  defaults = {
-    mappings = {
-      i = {
-        ['<C-u>'] = false,
-        ['<C-d>'] = false,
-      },
-    },
-  },
-}
-
 -- Enable telescope fzf native, if installed
-pcall(require('telescope').load_extension, 'fzf')
+local res, error = pcall(require('telescope').load_extension, 'fzf')
+if printErrors and not res then
+  print('telescope fzf extension initialization failed: ', error)
+end
+
+-- [[ Set pwd to lsp's buffer working directory if possible ]]
+local au_group = vim.api.nvim_create_augroup('BufPwdUpdate', { clear = true })
+vim.api.nvim_create_autocmd('BufEnter', {
+  group = au_group,
+  desc = 'Change pwd on entering the buffer to LSPs working dir if possible',
+  pattern = '*',
+  callback = function (args)
+    local workDirs = vim.lsp.buf.list_workspace_folders()
+    if #workDirs == 1 then
+      vim.cmd(string.format('lcd %s', workDirs[1]))
+    end
+  end
+})
 
 -- Telescope live_grep in git root
 -- Function to find the git root directory based on the current buffer's path
@@ -209,7 +223,7 @@ local function telescope_live_grep_open_files()
   }
 end
 vim.keymap.set('n', '<leader>s/', telescope_live_grep_open_files, { desc = '[S]earch [/] in Open Files' })
-vim.keymap.set('n', '<leader>ss', require('telescope.builtin').builtin, { desc = '[S]earch [S]elect Telescope' })
+-- vim.keymap.set('n', '<leader>ss', require('telescope.builtin').builtin, { desc = '[S]earch [S]pectre' })
 vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = 'Search [G]it [F]iles' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
@@ -332,6 +346,12 @@ local on_attach = function(_, bufnr)
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, '[W]orkspace [L]ist Folders')
 
+  -- Change current folder on LSP attach
+  local wsFolders = vim.lsp.buf.list_workspace_folders()
+  if #wsFolders > 0 then
+    vim.cmd(string.format('lcd %s', wsFolders[1]))
+  end
+
   -- Create a command `:Format` local to the LSP buffer
   vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
     vim.lsp.buf.format()
@@ -417,9 +437,9 @@ require('lspconfig').gdscript.setup{
   on_attach = on_attach,
   capabilities = capabilities,
   settings = servers['gdscript'],
-  filetypes = (servers[server_name] or {}).filetypes,
+  filetypes = (servers['gdscript'] or {}).filetypes,
   cmd = {'ncat', '127.0.0.1', '6005'},
-  on_error = function() 
+  on_error = function()
     print('lspconfig setup handler for gdscript: on_error called')
   end
 }
@@ -438,7 +458,7 @@ cmp.setup {
     end,
   },
   completion = {
-    completeopt = 'menu,menuone,noinsert',
+    completeopt = 'menu,menuone,noinsert,noselect',
   },
   mapping = cmp.mapping.preset.insert {
     ['<C-n>'] = cmp.mapping.select_next_item(),
@@ -448,7 +468,7 @@ cmp.setup {
     ['<C-Space>'] = cmp.mapping.complete {},
     ['<CR>'] = cmp.mapping.confirm {
       behavior = cmp.ConfirmBehavior.Replace,
-      select = true,
+      select = false,
     },
     ['<Tab>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
@@ -475,6 +495,5 @@ cmp.setup {
     { name = 'path' },
   },
 }
-
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
