@@ -52,6 +52,7 @@ end
 
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
+vim.g.lazygit_use_neovim_remote = 0
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    https://github.com/folke/lazy.nvim
@@ -121,7 +122,10 @@ vim.o.completeopt = 'menuone,noselect'
 vim.o.termguicolors = true
 
 vim.o.scrolloff = 3
+
 -- [[ Basic Keymaps ]]
+-- Key combination to open init.lua
+vim.keymap.set('n', '<leader>_', ":exe \"e \" .. stdpath('config') .. \"\\\\init.lua\"<CR>", { silent = true, desc = 'Edit init.lua config file' })
 
 -- Keymaps for better default experience
 -- See `:help vim.keymap.set()`
@@ -226,6 +230,14 @@ vim.keymap.set('n', '<leader>s/', telescope_live_grep_open_files, { desc = '[S]e
 -- vim.keymap.set('n', '<leader>ss', require('telescope.builtin').builtin, { desc = '[S]earch [S]pectre' })
 vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = 'Search [G]it [F]iles' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
+vim.keymap.set('n', '<leader>sF', function()
+  local searchPattern = vim.fn.expand('%:e')
+  if searchPattern ~= '' then
+    searchPattern = vim.fn.input('Enter file pattern: ', '*.' .. searchPattern)
+    require('telescope.builtin').find_files{search_file = searchPattern}
+  else
+    print("Can't detect file extension. Aborting, use <leader>sf instead")
+  end end, { desc = '[S]earch [F]iles using a pattern' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
 vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
@@ -233,6 +245,7 @@ vim.keymap.set('n', '<leader>sG', ':LiveGrepGitRoot<cr>', { desc = '[S]earch by 
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
 
+vim.keymap.set('n', '<leader>gg', ':LazyGit', { desc = 'Open LazyGit'})
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 -- Defer Treesitter setup after first render to improve startup time of 'nvim {filename}'
